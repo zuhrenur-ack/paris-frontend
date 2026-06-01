@@ -65,7 +65,7 @@ if places_data:
             found_any = True
             
             title = attrs.get('Title', 'İsimsiz Mekan')
-            desc = attrs.get('Description', 'Açıklama bulunmuyor.')
+            desc = attrs.get('Description', '') # Varsayılan olarak boş metin verdik
             rating = attrs.get('Rating', 0.0)
             
             # Ultra Esnek Görsel URL Yakalama Sistemi
@@ -96,7 +96,7 @@ if places_data:
             st.subheader(f"📍 {title}")
             st.write(f"⭐ **Puan:** {rating} / 5")
             
-            # 🔥 ÇÖKMEYİ ENGELLEYEN KORUMA KALKANI
+            # ÇÖKMEYİ ENGELLEYEN KORUMA KALKANI
             if img_url and img_url.startswith("http"):
                 try:
                     st.image(img_url, use_container_width=True)
@@ -105,15 +105,18 @@ if places_data:
             else:
                 st.caption("📷 Bu mekan için henüz geçerli bir görsel yüklenmemiş.")
 
-            # TR ve EN metinlerini ayırıyoruz
-            if "EN:" in desc:
-                parçalar = desc.split("EN:")
-                turkce_kisim = parçalar[0].replace("TR:", "").strip()
-                ingilizce_kisim = parçalar[1].strip()
-            else:
-                turkce_kisim = desc
-                ingilizce_kisim = "English translation not found."
+            # 🔥 TÜM MEKANLARIN GELMESİNİ SAĞLAYAN GÜVENLİ DİL AYRIMI
+            turkce_kisim = "Açıklama bulunmuyor."
+            ingilizce_kisim = "English translation not found."
 
+            if desc and isinstance(desc, str): # desc gerçekten bir metinse işlem yap diyoruz
+                if "EN:" in desc:
+                    parçalar = desc.split("EN:")
+                    turkce_kisim = parçalar[0].replace("TR:", "").strip()
+                    ingilizce_kisim = parçalar[1].strip()
+                else:
+                    turkce_kisim = desc
+            
             # Sitede yan yana açılır iki sekme oluşturuyoruz
             sekme_tr, sekme_en = st.tabs(["🇹🇷 Türkçe Açıklama", "🇬🇧 English Description"])
             

@@ -104,8 +104,25 @@ if places_data:
                     st.info("Görsel sunucudan yüklenirken pas geçildi.")
             else:
                 st.caption("📷 Bu mekan için henüz geçerli bir görsel yüklenmemiş.")
+
+            # TR ve EN metinlerini ayırıyoruz
+            if "EN:" in desc:
+                parçalar = desc.split("EN:")
+                turkce_kisim = parçalar[0].replace("TR:", "").strip()
+                ingilizce_kisim = parçalar[1].strip()
+            else:
+                turkce_kisim = desc
+                ingilizce_kisim = "English translation not found."
+
+            # Sitede yan yana açılır iki sekme oluşturuyoruz
+            sekme_tr, sekme_en = st.tabs(["🇹🇷 Türkçe Açıklama", "🇬🇧 English Description"])
+            
+            with sekme_tr:
+                st.write(turkce_kisim)
                 
-            st.markdown(desc)
+            with sekme_en:
+                st.write(ingilizce_kisim)
+                
             st.write("---")
 
 if not found_any:

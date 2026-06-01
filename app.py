@@ -8,7 +8,7 @@ STRAPI_TOKEN = st.secrets.get("STRAPI_TOKEN", "483e47724f7e55b4249a90db495d1635b
 
 HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 
-# KODUN İÇİNDEKİ HAZIR REHBER AÇIKLAMALARI (SADELEŞTİRİLMİŞ)
+# KODUN İÇİNDEKİ HAZIR REHBER AÇIKLAMALARI
 HAZIR_ACIKLAMALAR = {
     "eyfel": "TR: 1889 yılında Dünya Fuarı için geçici olarak inşa edilen bu devasa demir kule, günümüzde Paris'in kalbi ve dünyanın en ikonik yapısıdır. Şehri kuş bakışı izlemek için en mükemmel noktadır.\n\nEN: Built in 1889 for the World's Fair, this giant iron tower is now the heart of Paris and the world's most iconic structure. It is the perfect spot to view the city from a bird's eye view.",
     "louvre": "TR: Dünyanın en büyük ve en çok ziyaret edilen sanat müzesidir. Tarihi bir saray olan bu yapıda, ünlü Mona Lisa tablosu dahil binlerce yıllık eşsiz sanat eserleri sergilenmektedir.\n\nEN: It is the world's largest and most visited art museum. Located in a historic palace, this structure exhibits thousands of years of unique artworks, including the famous Mona Lisa.",
@@ -16,9 +16,25 @@ HAZIR_ACIKLAMALAR = {
     "zafer": "TR: Şanzelize Caddesi'nin başında gururla yükselen bu anıt, Fransız ordusunun zaferlerini taçlandırmak için inşa edilmiştir. Tepesine çıktığınızda Paris'in 12 büyük caddesinin birleşimini izleyebilirsiniz.\n\nEN: Rising proudly at the beginning of the Champs-Élysées Avenue, this monument was built to honor the victories of the French army. From its top, you can watch the intersection of Paris's 12 major avenues."
 }
 
-st.set_page_config(page_title="Paris Gezi Rehberi", page_icon="🗼", layout="centered")
-st.title("🗼 Yapay Zekâ Destekli Paris Gezi Rehberi")
-st.write("Otomasyon tarafından yüklenen ve yapay zekayla zenginleştirilen canlı mekanlar:")
+st.set_page_config(page_title="Paris Gezi Rehberi / Travel Guide", page_icon="🗼", layout="centered")
+
+# 🔥 1. ADIM: KÜRESEL DİL SEÇİCİ (En Üste Geldi)
+dil = st.selectbox("🌐 Dil Seçimi / Select Language", ["🇹🇷 Türkçe", "🇬🇧 English"])
+is_en = (dil == "🇬🇧 English") # Eğer English seçildiyse bu True olacak
+
+# 📊 DİNAMİK METİN AYARLARI
+# Site seçilen dile göre tamamen kimlik değiştirecek
+site_basligi = "🗼 Yapay Zekâ Destekli Paris Gezi Rehberi" if not is_en else "🗼 AI-Powered Paris Travel Guide"
+site_aciklamasi = "Otomasyon tarafından yüklenen ve yapay zekayla zenginleştirilen canlı mekanlar:" if not is_en else "Live places uploaded by automation and enriched by AI:"
+sehir_sec_metni = "Lütfen bir şehir seçin:" if not is_en else "Please select a city:"
+puan_metni = "Puan:" if not is_en else "Rating:"
+gorsel_yok_metni = "📷 Bu mekan için henüz geçerli bir görsel yüklenmemiş." if not is_en else "📷 No valid image uploaded for this place yet."
+gorsel_hata_metni = "Görsel sunucudan yüklenirken pas geçildi." if not is_en else "Skipped loading image from server due to an error."
+uyari_metni = "Bu şehre ait yayınlanmış ilişkili bir mekan bulunamadı." if not is_en else "No published places found associated with this city."
+
+# Ekrana dinamik başlıkları basıyoruz
+st.title(site_basligi)
+st.write(site_aciklamasi)
 
 # 2. BULUTTAN ŞEHİRLERİ ÇEKME
 city_names = ["Paris"]
@@ -40,7 +56,7 @@ try:
 except:
     pass
 
-selected_city = st.selectbox("Lütfen bir şehir seçin:", city_names)
+selected_city = st.selectbox(sehir_sec_metni, city_names)
 selected_city_id = city_mapping.get(selected_city)
 
 st.write("---")
@@ -72,12 +88,9 @@ if places_data:
         if linked_city_id == selected_city_id or selected_city == "Paris":
             found_any = True
             
-            # Süper Esnek Başlık ve Açıklama Yakalayıcı
             title = attrs.get('Title') or attrs.get('Name') or attrs.get('title') or attrs.get('name') or 'İsimsiz Mekan'
-            
             desc_raw = attrs.get('Description') or attrs.get('description') or attrs.get('desc') or attrs.get('Desc') or ''
             desc = str(desc_raw).strip()
-            
             rating = attrs.get('Rating', 0.0)
             
             # Hazır Rehber Yazılarını Eşleştirme Filtresi
@@ -113,16 +126,16 @@ if places_data:
 
             # Ekrana Şık Tasarımla Basma
             st.subheader(f"📍 {title}")
-            st.write(f"⭐ **Puan:** {rating} / 5")
+            st.write(f"⭐ **{puan_metni}** {rating} / 5")
             
             # ÇÖKMEYİ ENGELLEYEN KORUMA KALKANI
             if img_url and img_url.startswith("http"):
                 try:
                     st.image(img_url, use_container_width=True)
                 except Exception as img_err:
-                    st.info("Görsel sunucudan yüklenirken pas geçildi.")
+                    st.info(gorsel_hata_metni)
             else:
-                st.caption("📷 Bu mekan için henüz geçerli bir görsel yüklenmemiş.")
+                st.caption(gorsel_yok_metni)
 
             # TÜM MEKANLARIN GELMESİNİ SAĞLAYAN GÜVENLİ DİL AYRIMI
             turkce_kisim = "Açıklama bulunmuyor."
@@ -135,17 +148,15 @@ if places_data:
                     ingilizce_kisim = parçalar[1].strip()
                 else:
                     turkce_kisim = desc
-            
-            # Sitede yan yana açılır iki sekme oluşturuyoruz
-            sekme_tr, sekme_en = st.tabs(["🇹🇷 Türkçe Açıklama", "🇬🇧 English Description"])
-            
-            with sekme_tr:
-                st.write(turkce_kisim)
-                
-            with sekme_en:
+                    ingilizce_kisim = desc
+
+            # 🔥 2. ADIM: SEÇİLEN DİLE GÖRE METNİ EKRANA BASMA (Sekmeler kalktı!)
+            if is_en:
                 st.write(ingilizce_kisim)
+            else:
+                st.write(turkce_kisim)
                 
             st.write("---")
 
 if not found_any:
-    st.warning("Bu şehre ait yayınlanmış ilişkili bir mekan bulunamadı. Lütfen otomasyon kodunu çalıştırın ve Strapi'den 'Publish' yapın.")
+    st.warning(uyari_metni)

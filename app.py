@@ -8,6 +8,14 @@ STRAPI_TOKEN = st.secrets.get("STRAPI_TOKEN", "483e47724f7e55b4249a90db495d1635b
 
 HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 
+# 🌟 KODUN İÇİNDEKİ HAZIR REHBER AÇIKLAMALARI (FALLBACK DICTIONARY)
+HAZIR_ACIKLAMALAR = {
+    "eyfel": "TR: 1889 yılında Dünya Fuarı için geçici olarak inşa edilen bu devasa demir kule, günümüzde Paris'in kalbi ve dünyanın en ikonik yapısıdır. Şehri kuş bakışı izlemek için en mükemmel noktadır.\n\nEN: Built in 1889 for the World's Fair, this giant iron tower is now the heart of Paris and the world's most iconic structure. It is the perfect spot to view the city from a bird's eye view.",
+    "louvre": "TR: Dünyanın en büyük ve en çok ziyaret edilen sanat müzesidir. Tarihi bir saray olan bu yapıda, ünlü Mona Lisa tablosu dahil binlerce yıllık eşsiz sanat eserleri sergilenmektedir.\n\nEN: It is the world's largest and most visited art museum. Located in a historic palace, this structure exhibits thousands of years of unique artworks, including the famous Mona Lisa.",
+    "notre": "TR: Gotik mimarinin dünyadaki en nadide örneği olan bu büyüleyici katedral, Seine Nehri'nin ortasındaki bir adada yer alır. Devasa gül pencereleri ve mistik atmosferiyle ünlüdür.\n\nEN: The finest example of Gothic architecture in the world, this fascinating cathedral is located on an island in the middle of the Seine River. It is famous for its massive rose windows and mystical atmosphere.",
+    "zafer": "TR: Şanzelize Caddesi'nin başında gururla yükselen bu anıt, Fransız ordusunun zaferlerini taçlandırmak için inşa edilmiştir. Tepesine çıktığınızda Paris'in 12 büyük caddesinin birleşimini izleyebilirsiniz.\n\nEN: Rising proudly at the beginning of the Champs-Élysées Avenue, this monument was built to honor the victories of the French army. From its top, you can watch the intersection of Paris's 12 major avenues.",
+}
+
 st.set_page_config(page_title="Paris Gezi Rehberi", page_icon="🗼", layout="centered")
 st.title("🗼 Yapay Zekâ Destekli Paris Gezi Rehberi")
 st.write("Otomasyon tarafından yüklenen ve yapay zekayla zenginleştirilen canlı mekanlar:")
@@ -65,9 +73,16 @@ if places_data:
             found_any = True
             
             title = attrs.get('Title', 'İsimsiz Mekan')
-            desc = attrs.get('Description', '') # Varsayılan olarak boş metin verdik
+            desc = attrs.get('Description', '')
             rating = attrs.get('Rating', 0.0)
             
+            # 🔥 AKILLI AÇIKLAMA KONTROLÜ: Eğer veritabanında açıklama yoksa koddaki hazır açıklamayı eşleştir
+            if not desc or "EN:" not in str(desc):
+                for anahtar, hazir_metin in HAZIR_ACIKLAMALAR.items():
+                    if anahtar in title.lower():
+                        desc = hazir_metin
+                        break
+
             # Ultra Esnek Görsel URL Yakalama Sistemi
             img_url = None
             img_field = attrs.get('Image')
@@ -105,11 +120,11 @@ if places_data:
             else:
                 st.caption("📷 Bu mekan için henüz geçerli bir görsel yüklenmemiş.")
 
-            # 🔥 TÜM MEKANLARIN GELMESİNİ SAĞLAYAN GÜVENLİ DİL AYRIMI
+            # TÜM MEKANLARIN GELMESİNİ SAĞLAYAN GÜVENLİ DİL AYRIMI
             turkce_kisim = "Açıklama bulunmuyor."
             ingilizce_kisim = "English translation not found."
 
-            if desc and isinstance(desc, str): # desc gerçekten bir metinse işlem yap diyoruz
+            if desc and isinstance(desc, str):
                 if "EN:" in desc:
                     parçalar = desc.split("EN:")
                     turkce_kisim = parçalar[0].replace("TR:", "").strip()

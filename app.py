@@ -1,79 +1,94 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="YZ Destekli Gezi Rehberi", page_icon="🗼", layout="wide")
+# 1. BAĞLANTI AYARLARI (Gelişmiş ayarlardan veya yedek olarak buradaki tokenla çalışır)
+STRAPI_URL = st.secrets.get("STRAPI_URL", "https://paris-strapi-backend.onrender.com/api")
+STRAPI_TOKEN = st.secrets.get("STRAPI_TOKEN", "483e47724f7e55b4249a90db495d1635bd0c3d8f49ff6c846ba8e2fa290ea5fffd2120ecd582d9bc2f7db6263eef5b8e5173cc93d7529a55e2643ac1857567830bd58df7e457c130049990e2e8be0244ec75d0a3af5fb030eceb02756983e1f8990715385f04c1fc6c81621982146a7abe64c3ecfe453b830fb5134bf7547915")
 
-STRAPI_URL = "http://localhost:1337/api"
-STRAPI_BASE = "http://localhost:1337"
+HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 
-st.title("🗼 Paris Yapay Zeka Destekli Gezi Rehberi")
-st.caption("Strapi v5, Otomasyon Motoru ve Streamlit Entegrasyonu")
+st.set_page_config(page_title="Paris Gezi Rehberi", page_icon="🗼", layout="centered")
+st.title("🗼 Yapay Zekâ Destekli Paris Gezi Rehberi")
+st.write("Otomasyon tarafından yüklenen ve yapay zekayla zenginleştirilen canlı mekanlar:")
 
-# Dil Seçimi
-dil = st.selectbox("🌐 Dil Seçin / Select Language", ["Türkçe (TR)", "English (EN)"])
-st.markdown("---")
+# 2. BULUTTAN ŞEHİRLERİ ÇEKME
+city_names = ["Paris"]
+city_mapping = {"Paris": 1}
 
-# Şehirleri Çekme
 try:
-    cities_resp = requests.get(f"{STRAPI_URL}/cities")
-    cities_list = [c['Name'] for c in cities_resp.json().get('data', [])]
+    cities_resp = requests.get(f"{STRAPI_URL}/cities", headers=HEADERS)
+    if cities_resp.status_code == 200:
+        cities_data = cities_resp.json().get('data', [])
+        if cities_data:
+            city_names = []
+            city_mapping = {}
+            for c in cities_data:
+                c_id = c.get('id')
+                attrs = c.get('attributes', c)
+                # Sende Name veya Title olabilir, ikisini de kontrol ediyoruz
+                name = attrs.get('Name', attrs.get('Title', attrs.get('title', 'Paris')))
+                city_names.append(name)
+                city_mapping[name] = c_id
 except:
-    cities_list = ["Paris"]
+    pass
 
-if not cities_list:
-    cities_list = ["Paris"]
+selected_city = st.selectbox("Lütfen bir şehir seçin:", city_names)
+selected_city_id = city_mapping.get(selected_city)
 
-secilen_sehir = st.selectbox("🌆 Gezmek İstediğiniz Şehri Seçin:", cities_list)
+st.write("---")
 
-# Mekanları Çekme
+# 3. BULUTTAN MEKANLARI ÇEKME (?populate=* ile resim ve şehir bağını zorla getiriyoruz)
 try:
-    places_resp = requests.get(f"{STRAPI_URL}/places?filters[city][Name][$eq]={secilen_sehir}&populate=*")
+    places_resp = requests.get(f"{STRAPI_URL}/places?populate=*", headers=HEADERS)
     places_data = places_resp.json().get('data', [])
 except:
     places_data = []
 
-st.markdown("### 📍 Şehirdeki Turistik Mekanlar")
+found_any = False
 
-if not places_data:
-    st.info("Bu şehre ait yayınlanmış ilişkili bir mekan bulunamadı. Lütfen otomasyon kodunu çalıştırın ve Strapi'den 'Publish' yapın.")
-else:
-    cols = st.columns(2)
-    for idx, place in enumerate(places_data):
-        with cols[idx % 2]:
-            title = place.get('Title', 'İsimsiz Mekan')
-            desc_text = place.get('Description', '')
-            rating = place.get('Rating', 5.0)
-            
-            # Güvenli metin kontrolü (NoneType hatasını engelleyen kısım)
-            if desc_text is None:
-                desc_text = "Açıklama belirtilmemiş. / Description not provided."
+if places_data:
+    for p in places_data:
+        attrs = p.get('attributes', p)
+        
+        # Şehir ilişkisini çözme (Strapi v4 ve v5 uyumlu)
+        city_rel = attrs.get('city', {})
+        linked_city_id = None
+        if isinstance(city_rel, dict):
+            city_data = city_rel.get('data')
+            if city_data and isinstance(city_data, dict):
+                linked_city_id = city_data.get('id')
             else:
-                desc_text = str(desc_text)
-            
-            # Dil Ayıklaması
-            if "TR" in dil:
-                display_desc = desc_text.split("EN:")[0].replace("TR:", "").strip()
-                rating_text = f"⭐ Puan: {rating} / 5.0"
-                display_title = title
-            else:
-                display_desc = desc_text.split("EN:")[-1].strip() if "EN:" in desc_text else desc_text
-                rating_text = f"⭐ Rating: {rating} / 5.0"
-                en_titles = {"Eyfel Kulesi": "Eiffel Tower", "Louvre Müzesi": "Louvre Museum", "Notre-Dame Katedrali": "Notre-Dame Cathedral", "Zafer Takı": "Arc de Triomphe"}
-                display_title = en_titles.get(title, title)
+                linked_city_id = city_rel.get('id')
 
-            st.subheader(display_title)
+        # Filtreleme: Mekan seçili şehre aitse ekrana bas
+        if linked_city_id == selected_city_id or selected_city == "Paris":
+            found_any = True
             
-            # Resim Gösterimi
-            image_data = place.get('Image', None)
-            if image_data and 'url' in image_data:
-                img_url = f"{STRAPI_BASE}{image_data['url']}"
+            # Sizin formdaki tam alan isimleri (Büyük harf duyarlı)
+            title = attrs.get('Title', 'İsimsiz Mekan')
+            desc = attrs.get('Description', 'Açıklama bulunmuyor.')
+            rating = attrs.get('Rating', 0.0)
+            
+            # Görsel URL'sini hatasız çekme mimarisi
+            img_url = None
+            img_field = attrs.get('Image')
+            if img_field and isinstance(img_field, dict):
+                img_data = img_field.get('data')
+                if img_data and isinstance(img_data, dict):
+                    img_attrs = img_data.get('attributes', img_data)
+                    img_url = img_attrs.get('url')
+                elif 'url' in img_field:
+                    img_url = img_field.get('url')
+
+            # Ekrana Şık Bir Tasarımla Basma
+            st.subheader(f"📍 {title}")
+            st.write(f"⭐ **Puan:** {rating} / 5")
+            
+            if img_url:
                 st.image(img_url, use_container_width=True)
-            else:
-                st.warning("Bu mekanın resmi Strapi Media Library'de bulunamadı.")
                 
-            st.write(display_desc)
-            st.caption(rating_text)
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(desc)
+            st.write("---")
 
-st.markdown("---")
-st.caption("Zührenur - Final Ödevi Projesi © 2026")
+if not found_any:
+    st.warning("Bu şehre ait yayınlanmış ilişkili bir mekan bulunamadı. Lütfen otomasyon kodunu çalıştırın ve Strapi'den 'Publish' yapın.")

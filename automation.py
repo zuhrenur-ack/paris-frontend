@@ -2,8 +2,8 @@ import requests
 from deep_translator import GoogleTranslator
 
 # --- 1. BAĞLANTI VE ABONELİK AYARLARI ---
-STRAPI_URL = "http://localhost:1337/api"
-STRAPI_UPLOAD_URL = "http://localhost:1337/api/upload"
+STRAPI_URL = "https://paris-strapi-backend.onrender.com/api"
+STRAPI_UPLOAD_URL = "https://paris-strapi-backend.onrender.com/api/upload"
 
 # ⚠️ KENDİ UZUN TOKEN ŞİFRENİ BURAYA YAPIŞTIR
 STRAPI_TOKEN = "08921fb60a416ac5aa8b4671e01757786dc51d4f68ef6a28e029c57e7be908d2330543e433244cae89eb6856f963d67374ea5ebb9cd86ad53c6e24ce92f6120be25609a77ea619bd9e464a5320f98ef6acb9b3ae756be968ee0e45c84f570c8214ec8d14c07d1d75597c03dbd285900a754447350122818977c5af84b0ee11c9"

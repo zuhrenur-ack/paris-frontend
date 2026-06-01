@@ -5,7 +5,7 @@ from deep_translator import GoogleTranslator
 STRAPI_URL = "https://paris-strapi-backend.onrender.com/api"
 STRAPI_UPLOAD_URL = "https://paris-strapi-backend.onrender.com/api/upload"
 
-STRAPI_TOKEN = "483e47724f7e55b4249a90db495d1635bd0c3d8f49ff6c846ba8e2fa290ea5fffd2120ecd582d9bc2f7db6263eef5b8e5173cc93d7529a55e2643ac1857567830bd58df7e457c130049990e2e8be0244ec75d0a3af5fb030eceb02756983e1f8990715385f04c1fc6c81621982146a7abe64c3ecfe453b830fb5134bf7547915"
+STRAPI_TOKEN = "0d491a8a710e3fab8d21e6a955f837d104b0791439a46b0a0ac395a32357a52b1a5aeeed5aa859d301e8bc06eea7aa19d03c582112bea7462c9587f36bd59e752649678e985d41877855ad91631122e928372fe25404dcfd96a485c7b75fe051e6c4f75e0da836a646e51645da96225e9ce05f95a0d68be285fe24f1af8b597b"
 
 HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 translator = GoogleTranslator(source='tr', target='en')

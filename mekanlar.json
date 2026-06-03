@@ -1,0 +1,26 @@
+[
+    {
+        "title": "Eyfel Kulesi",
+        "desc": "Paris'in sembolü olan bu devasa demir kule, muhteşem bir şehir manzarası sunar.",
+        "rating": 4.9,
+        "prompt": "Eiffel Tower in Paris cinematic sunset view photorealistic"
+    },
+    {
+        "title": "Louvre Müzesi",
+        "desc": "Dünyanın en büyük sanat müzesidir. Cam piramidi ve Mona Lisa tablosuyla ünlüdür.",
+        "rating": 4.8,
+        "prompt": "The Louvre Museum glass pyramid at night in Paris 8k"
+    },
+    {
+        "title": "Notre-Dame Katedrali",
+        "desc": "Gotik mimarinin en güzel örneklerinden biri olan bu yapı, tarihi bir katedraldir.",
+        "rating": 4.7,
+        "prompt": "Notre-Dame Cathedral in Paris autumn realistic"
+    },
+    {
+        "title": "Zafer Takı",
+        "desc": "Napolyon tarafından yaptırılan, Paris'in en önemli tarihi anıtlarından biridir.",
+        "rating": 4.6,
+        "prompt": "Arc de Triomphe in Paris beautiful street lighting cinematic"
+    }
+]

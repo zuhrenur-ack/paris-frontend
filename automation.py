@@ -1,44 +1,24 @@
 import requests
+import json  # JSON dosyasını okumak için bu kütüphaneyi ekledik
 from deep_translator import GoogleTranslator
 
 # --- 1. BAĞLANTI VE ABONELİK AYARLARI ---
-STRAPI_URL = "https://paris-strapi-backend.onrender.com/api"
-STRAPI_UPLOAD_URL = "https://paris-strapi-backend.onrender.com/api/upload"
+# DİKKAT: Burada az önce konuştuğumuz gibi "-strapi-" kısmını sildik! Doğru linki yazdık.
+STRAPI_URL = "https://paris-backend.onrender.com/api"
+STRAPI_UPLOAD_URL = "https://paris-backend.onrender.com/api/upload"
 
-STRAPI_TOKEN = "aee09eccd7d69f4c3cf9ca8ef5c5acdbea66d100d77a5e49bf6c4b02d5c47ad37c5c6b65c1083906525131be3c5e1ad5445d3aa6f3d0e7e50b5f43314f34afb25d3ca4ec86787234aa93c51baddf5dc3daaaca584c7d857aaa1852c95461ecec251162c88de13a7b14bd8cea96db712db36aa7ba5ba08d48da349097122b3746"
+STRAPI_TOKEN = "55a1af5cd5f1544740887b7045c6d87a7933a29d223cac85ca4a321cbf7181119a5be6abeded15806062d7079cd9bee2eb75733e697ec5ca32cea9d15ce5f1cbb5bc27ecf24c004fd6c549a89303fab1e9f34ebb7d2304c3b09b733c859a51ceab906d28199f438404b502da4e2be459847545b8608ee705a13a48b939dea833"
 
 HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 translator = GoogleTranslator(source='tr', target='en')
 
-# --- 2. VERİ LİSTESİ ---
-mekanlar = [
-    {
-        "title": "Eyfel Kulesi",
-        "desc": "Paris'in sembolü olan bu devasa demir kule, muhteşem bir şehir manzarası sunar.",
-        "rating": 4.9,
-        "prompt": "Eiffel Tower in Paris cinematic sunset view photorealistic"
-    },
-    {
-        "title": "Louvre Müzesi",
-        "desc": "Dünyanın en büyük sanat müzesidir. Cam piramidi ve Mona Lisa tablosuyla ünlüdür.",
-        "rating": 4.8,
-        "prompt": "The Louvre Museum glass pyramid at night in Paris 8k"
-    },
-    {
-        "title": "Notre-Dame Katedrali",
-        "desc": "Gotik mimarinin en güzel örneklerinden biri olan bu yapı, tarihi bir katedraldir.",
-        "rating": 4.7,
-        "prompt": "Notre-Dame Cathedral in Paris autumn realistic"
-    },
-    {
-        "title": "Zafer Takı",
-        "desc": "Napolyon tarafından yaptırılan, Paris'in en önemli tarihi anıtlarından biridir.",
-        "rating": 4.6,
-        "prompt": "Arc de Triomphe in Paris beautiful street lighting cinematic"
-    }
-]
+# --- 2. VERİ LİSTESİNİ JSON'DAN ÇEKME (Profesyonel Yöntem) ---
+with open("mekanlar.json", "r", encoding="utf-8") as file:
+    mekanlar = json.load(file)
 
 print("🤖 Otomasyon Motoru Başlatılıyor...\n" + "-"*50)
+
+# (Kodun geri kalanı aşağıda aynı şekilde devam edecek...)
 
 # --- 3. ŞEHİR KONTROLÜ ---
 print("🔍 Paris şehri bulut veritabanında aranıyor...")

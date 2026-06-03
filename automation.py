@@ -1,99 +1,91 @@
 import requests
-import json  # JSON dosyasını okumak için bu kütüphaneyi ekledik
+import json
 from deep_translator import GoogleTranslator
 
-# --- 1. BAĞLANTI VE ABONELİK AYARLARI ---
-# DİKKAT: Burada az önce konuştuğumuz gibi "-strapi-" kısmını sildik! Doğru linki yazdık.
-STRAPI_URL = "https://paris-backend.onrender.com/api"
-STRAPI_UPLOAD_URL = "https://paris-backend.onrender.com/api/upload"
-
+# --- 1. BAĞLANTI AYARLARI ---
+STRAPI_URL = "https://paris-strapi-backend.onrender.com/api"
+STRAPI_UPLOAD_URL = "https://paris-strapi-backend.onrender.com/api/upload"
 STRAPI_TOKEN = "55a1af5cd5f1544740887b7045c6d87a7933a29d223cac85ca4a321cbf7181119a5be6abeded15806062d7079cd9bee2eb75733e697ec5ca32cea9d15ce5f1cbb5bc27ecf24c004fd6c549a89303fab1e9f34ebb7d2304c3b09b733c859a51ceab906d28199f438404b502da4e2be459847545b8608ee705a13a48b939dea833"
 
-HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
+UPLOAD_HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
+DATA_HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}", "Content-Type": "application/json"}
+
 translator = GoogleTranslator(source='tr', target='en')
 
-# --- 2. VERİ LİSTESİNİ JSON'DAN ÇEKME (Profesyonel Yöntem) ---
-with open("mekanlar.json", "r", encoding="utf-8") as file:
-    mekanlar = json.load(file)
-
-print("🤖 Otomasyon Motoru Başlatılıyor...\n" + "-"*50)
-
-# (Kodun geri kalanı aşağıda aynı şekilde devam edecek...)
-
-# --- 3. ŞEHİR KONTROLÜ ---
-print("🔍 Paris şehri bulut veritabanında aranıyor...")
-city_id = None
+# YAPAY ZEKAYI ÇÖPE ATTIK! İŞTE GERÇEK VE GARANTİLİ FOTOĞRAF LİNKLERİ:
+GARANTILI_FOTOLAR = {
+    "Eyfel Kulesi": "https://images.unsplash.com/photo-1543305113-162955fbd672?q=80&w=1280",
+    "Louvre Müzesi": "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1280",
+    "Notre-Dame Katedrali": "https://images.unsplash.com/photo-1551056586-778939634d12?q=80&w=1280",
+    "Zafer Takı": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1280"
+}
 
 try:
-    city_resp = requests.get(f"{STRAPI_URL}/cities?filters[Name][$eq]=Paris", headers=HEADERS)
+    with open("mekanlar.json", "r", encoding="utf-8") as file:
+        mekanlar = json.load(file)
+except FileNotFoundError:
+    print("❌ HATA: 'mekanlar.json' bulunamadı!")
+    exit()
+
+print("🚀 Kurşun Geçirmez Otomasyon Başlatılıyor...\n" + "-"*50)
+
+city_id = 1
+try:
+    city_resp = requests.get(f"{STRAPI_URL}/cities?filters[Name][$eq]=Paris", headers=UPLOAD_HEADERS)
     city_data = city_resp.json().get('data', [])
-    
     if city_data:
         city_id = city_data[0]['id']
-        print(f"   ✓ Paris Şehri Zaten Var! ID: {city_id}")
-    else:
-        print("   ⚠️ Paris şehri bulunamadı! Otomatik oluşturuluyor...")
-        city_payload = {
-            "data": {
-                "Name": "Paris",
-                "Country": "Fransa",
-                "Description": "Aşkın, sanatın ve modanın küresel başkenti."
-            }
-        }
-        create_city_resp = requests.post(f"{STRAPI_URL}/cities", json=city_payload, headers=HEADERS)
-        if create_city_resp.status_code in [200, 201]:
-            res_json = create_city_resp.json().get('data', {})
-            city_id = res_json.get('id') if isinstance(res_json, dict) else res_json[0].get('id')
-            print(f"   ✅ Paris Şehri Bulutta Başarıyla Oluşturuldu! ID: {city_id}")
-except Exception as e:
-    print(f"   ❌ Şehir işlemlerinde hata oluştu.")
+except:
+    pass
 
-if not city_id:
-    city_id = 1
-    print("   ⚠️ Varsayılan ID: 1 kullanılacak.")
-
-# --- 4. MEKAN DÖNGÜSÜ (EKRAN GÖRÜNTÜNDEKİ BİREBİR ALANLAR) ---
 for mekan in mekanlar:
-    print(f"\n📍 İşleniyor: {mekan['title']}")
+    baslik = mekan['title']
+    print(f"\n📍 İşleniyor: {baslik}")
     
-    # A. Zenginleştirme (Çeviri)
     en_desc = translator.translate(mekan['desc'])
     full_text = f"TR: {mekan['desc']}\n\nEN: {en_desc}"
-    print(f"   ✓ İngilizce Çeviri Tamamlandı.")
     
-    # B. Yapay Ceka Görsel Üretimi (Pollinations)
-    img_url = f"https://image.pollinations.ai/prompt/{mekan['prompt'].replace(' ', '%20')}?width=1280&height=720&nologo=true"
+    # Paralı site yerine doğrudan yüksek kaliteli gerçek fotoğrafı çekiyoruz
+    img_url = GARANTILI_FOTOLAR.get(baslik, GARANTILI_FOTOLAR["Eyfel Kulesi"])
+    print(f"   ⏳ Gerçek fotoğraf Unsplash'ten indiriliyor...")
+    
     img_response = requests.get(img_url)
-    
-    # C. Medya Yükleme
     image_id = None
-    try:
-        files = {"files": (f"{mekan['title']}.jpg", img_response.content, "image/jpeg")}
-        upload_resp = requests.post(STRAPI_UPLOAD_URL, files=files, headers=HEADERS)
-        if upload_resp.status_code in [200, 201]:
-            image_id = upload_resp.json()[0]['id']
-            print("   ✅ Resim Strapi Media Library'ye API ile başarıyla yüklendi!")
-    except Exception as e:
-        print("   ❌ Resim Media Library'ye yüklenirken hata oluştu.")
+    
+    if img_response.status_code == 200:
+        try:
+            files = {
+                'files': (f"{baslik}.jpg", img_response.content, 'image/jpeg')
+            }
+            print(f"   ⏳ Fotoğraf Strapi bulutuna (Cloudinary) post ediliyor...")
+            upload_resp = requests.post(STRAPI_UPLOAD_URL, files=files, headers=UPLOAD_HEADERS)
+            
+            if upload_resp.status_code in [200, 201]:
+                res_json = upload_resp.json()
+                image_id = res_json[0]['id']
+                print(f"   ✅ Görsel başarıyla buluta yüklendi! ID: {image_id}")
+            else:
+                print(f"   ❌ Görsel Yükleme Hatası ({upload_resp.status_code}): {upload_resp.text}")
+        except Exception as e:
+            print(f"   ❌ Medya gönderim esnasında hata: {e}")
+    else:
+        print(f"   ❌ Fotoğraf indirilemedi! Hata Kodu: {img_response.status_code}")
 
-    # D. API ENTEGRASYONU (Senin ekranındaki büyük/küçük harf hassasiyeti)
     payload = {
         "data": {
-            "Title": mekan['title'],         # Sende: Title (Büyük T)
-            "Description": full_text,        # Sende: Description (Büyük D)
-            "Rating": mekan['rating'],        # Sende: Rating (Büyük R)
-            "city": city_id                  # Sende: city (Küçük c)
+            "Title": baslik,         
+            "Description": full_text,        
+            "Rating": mekan['rating'],        
+            "city": city_id                  
         }
     }
-    
     if image_id:
-        payload["data"]["Image"] = image_id  # Sende: Image (Büyük I)
+        payload["data"]["Image"] = image_id  
 
-    response = requests.post(f"{STRAPI_URL}/places", json=payload, headers=HEADERS)
+    response = requests.post(f"{STRAPI_URL}/places", json=payload, headers=DATA_HEADERS)
     if response.status_code in [200, 201]:
-        print(f"   🎉 {mekan['title']} tüm gereksinimlerle Strapi'ye kaydedildi!")
+        print(f"   🎉 {baslik} veri tabanına FOTOĞRAFIYLA başarıyla işlendi!")
     else:
-        print(f"   ❌ Kayıt Hatası: {response.status_code}")
-        print(f"   📋 Sunucu Yanıtı: {response.text}")
+        print(f"   ❌ Mekan Kayıt Hatası: {response.text}")
 
-print("\n🚀 TÜM BULUT VERİTABANI BAŞARIYLA DOLDURULDU!")
+print("\n🚀 İŞLEM TAMAMLANDI! ARTIK KUTLAMA YAPABİLİRİZ! SİTENİ KONTROL ET.")

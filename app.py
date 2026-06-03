@@ -2,13 +2,12 @@ import streamlit as st
 import requests
 
 # 1. BAĞLANTI AYARLARI
+# Doğru Render linkin buraya da eklendi!
 STRAPI_BASE_URL = "https://paris-strapi-backend.onrender.com"
 STRAPI_URL = f"{STRAPI_BASE_URL}/api"
-STRAPI_TOKEN = st.secrets.get("STRAPI_TOKEN", "55a1af5cd5f1544740887b7045c6d87a7933a29d223cac85ca4a321cbf7181119a5be6abeded15806062d7079cd9bee2eb75733e697ec5ca32cea9d15ce5f1cbb5bc27ecf24c004fd6c549a89303fab1e9f34ebb7d2304c3b09b733c859a51ceab906d28199f438404b502da4e2be459847545b8608ee705a13a48b939dea833")
-
+STRAPI_TOKEN = "55a1af5cd5f1544740887b7045c6d87a7933a29d223cac85ca4a321cbf7181119a5be6abeded15806062d7079cd9bee2eb75733e697ec5ca32cea9d15ce5f1cbb5bc27ecf24c004fd6c549a89303fab1e9f34ebb7d2304c3b09b733c859a51ceab906d28199f438404b502da4e2be459847545b8608ee705a13a48b939dea833"
 HEADERS = {"Authorization": f"Bearer {STRAPI_TOKEN}"}
 
-# KODUN İÇİNDEKİ HAZIR REHBER AÇIKLAMALARI
 HAZIR_ACIKLAMALAR = {
     "eyfel": "TR: 1889 yılında Dünya Fuarı için geçici olarak inşa edilen bu devasa demir kule, günümüzde Paris'in kalbi ve dünyanın en ikonik yapısıdır. Şehri kuş bakışı izlemek için en mükemmel noktadır.\n\nEN: Built in 1889 for the World's Fair, this giant iron tower is now the heart of Paris and the world's most iconic structure. It is the perfect spot to view the city from a bird's eye view.",
     "louvre": "TR: Dünyanın en büyük ve en çok ziyaret edilen sanat müzesidir. Tarihi bir saray olan bu yapıda, ünlü Mona Lisa tablosu dahil binlerce yıllık eşsiz sanat eserleri sergilenmektedir.\n\nEN: It is the world's largest and most visited art museum. Located in a historic palace, this structure exhibits thousands of years of unique artworks, including the famous Mona Lisa.",
@@ -18,12 +17,9 @@ HAZIR_ACIKLAMALAR = {
 
 st.set_page_config(page_title="Paris Gezi Rehberi / Travel Guide", page_icon="🗼", layout="centered")
 
-# 🔥 1. ADIM: KÜRESEL DİL SEÇİCİ (En Üste Geldi)
 dil = st.selectbox("🌐 Dil Seçimi / Select Language", ["🇹🇷 Türkçe", "🇬🇧 English"])
-is_en = (dil == "🇬🇧 English") # Eğer English seçildiyse bu True olacak
+is_en = (dil == "🇬🇧 English")
 
-# 📊 DİNAMİK METİN AYARLARI
-# Site seçilen dile göre tamamen kimlik değiştirecek
 site_basligi = "🗼 Yapay Zekâ Destekli Paris Gezi Rehberi" if not is_en else "🗼 AI-Powered Paris Travel Guide"
 site_aciklamasi = "Otomasyon tarafından yüklenen ve yapay zekayla zenginleştirilen canlı mekanlar:" if not is_en else "Live places uploaded by automation and enriched by AI:"
 sehir_sec_metni = "Lütfen bir şehir seçin:" if not is_en else "Please select a city:"
@@ -32,11 +28,9 @@ gorsel_yok_metni = "📷 Bu mekan için henüz geçerli bir görsel yüklenmemi�
 gorsel_hata_metni = "Görsel sunucudan yüklenirken pas geçildi." if not is_en else "Skipped loading image from server due to an error."
 uyari_metni = "Bu şehre ait yayınlanmış ilişkili bir mekan bulunamadı." if not is_en else "No published places found associated with this city."
 
-# Ekrana dinamik başlıkları basıyoruz
 st.title(site_basligi)
 st.write(site_aciklamasi)
 
-# 2. BULUTTAN ŞEHİRLERİ ÇEKME
 city_names = ["Paris"]
 city_mapping = {"Paris": 1}
 
@@ -61,7 +55,6 @@ selected_city_id = city_mapping.get(selected_city)
 
 st.write("---")
 
-# 3. BULUTTAN MEKANLARI ÇEKME
 try:
     places_resp = requests.get(f"{STRAPI_URL}/places?populate=*", headers=HEADERS)
     places_data = places_resp.json().get('data', [])
@@ -73,8 +66,6 @@ found_any = False
 if places_data:
     for p in places_data:
         attrs = p.get('attributes', p)
-        
-        # Şehir ilişkisini çözme
         city_rel = attrs.get('city', {})
         linked_city_id = None
         if isinstance(city_rel, dict):
@@ -84,7 +75,6 @@ if places_data:
             else:
                 linked_city_id = city_rel.get('id')
 
-        # Filtreleme
         if linked_city_id == selected_city_id or selected_city == "Paris":
             found_any = True
             
@@ -93,14 +83,12 @@ if places_data:
             desc = str(desc_raw).strip()
             rating = attrs.get('Rating', 0.0)
             
-            # Hazır Rehber Yazılarını Eşleştirme Filtresi
             if not desc or desc == "None" or "EN:" not in desc:
                 for anahtar, hazir_metin in HAZIR_ACIKLAMALAR.items():
                     if anahtar in title.lower():
                         desc = hazir_metin
                         break
 
-            # Ultra Esnek Görsel URL Yakalama Sistemi
             img_url = None
             img_field = attrs.get('Image')
             
@@ -117,18 +105,15 @@ if places_data:
                     if isinstance(first_img, dict):
                         img_url = first_img.get('url', first_img.get('attributes', {}).get('url'))
 
-            # Linki tam adrese tamamlama güvencesi
             if img_url and isinstance(img_url, str):
                 if img_url.startswith("/"):
                     img_url = f"{STRAPI_BASE_URL}{img_url}"
             else:
                 img_url = None
 
-            # Ekrana Şık Tasarımla Basma
             st.subheader(f"📍 {title}")
             st.write(f"⭐ **{puan_metni}** {rating} / 5")
             
-            # ÇÖKMEYİ ENGELLEYEN KORUMA KALKANI
             if img_url and img_url.startswith("http"):
                 try:
                     st.image(img_url, use_container_width=True)
@@ -137,7 +122,6 @@ if places_data:
             else:
                 st.caption(gorsel_yok_metni)
 
-            # TÜM MEKANLARIN GELMESİNİ SAĞLAYAN GÜVENLİ DİL AYRIMI
             turkce_kisim = "Açıklama bulunmuyor."
             ingilizce_kisim = "English translation not found."
 
@@ -150,7 +134,6 @@ if places_data:
                     turkce_kisim = desc
                     ingilizce_kisim = desc
 
-            # 🔥 2. ADIM: SEÇİLEN DİLE GÖRE METNİ EKRANA BASMA (Sekmeler kalktı!)
             if is_en:
                 st.write(ingilizce_kisim)
             else:
